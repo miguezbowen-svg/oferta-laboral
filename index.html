@@ -48,6 +48,7 @@ label{display:block;font-size:.85rem;color:var(--mu);margin:10px 0 3px}
 .miss{border-color:#e08a00!important;background:rgba(224,138,0,.1)}
 .chip.st-revision{background:rgba(224,138,0,.16);color:#c27400}.chip.st-finalizado{background:rgba(128,128,128,.2);color:var(--mu)}
 .closed{margin-top:16px;padding:12px;border-radius:10px;background:var(--ac2);text-align:center;font-weight:600;color:var(--mu)}
+.kc{font:700 1.05rem monospace;letter-spacing:2px;color:var(--ac)}
 .note{font-size:.8rem;color:var(--mu);margin-top:16px;text-align:center}
 </style>
 </head>
@@ -55,7 +56,7 @@ label{display:block;font-size:.85rem;color:var(--mu);margin:10px 0 3px}
 <div class="w">
   <header>
     <h1>Trabajos <span>Ambientales</span></h1>
-    <button class="btn" id="new">+ Publicar aviso</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn s" id="mine">Mis avisos</button><button class="btn" id="new">+ Publicar aviso</button></div>
   </header>
   <p class="sub">Empleos, prácticas y voluntariados para ingenieros/as y técnicos/as ambientales, por años de experiencia.</p>
   <div class="bar">
@@ -74,6 +75,13 @@ label{display:block;font-size:.85rem;color:var(--mu);margin:10px 0 3px}
 <div class="ov" id="ovD"><div class="md" id="det"></div></div>
 
 <div class="ov" id="ovK"><div class="md" id="kbox"></div></div>
+
+<div class="ov" id="ovM"><div class="md"><h2>Mis avisos</h2>
+  <p class="meta">Aquí aparecen los avisos que publicaste desde este dispositivo, con su código para editarlos o eliminarlos.</p>
+  <label>Tu correo (para filtrar y enviarte los códigos)</label><input id="m_mail" type="email" placeholder="tucorreo@ejemplo.com">
+  <div id="m_list" style="margin-top:12px"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><a class="btn" id="m_send" style="text-decoration:none;display:none">Enviar mis códigos a mi correo</a><button class="btn s" id="m_close">Cerrar</button></div>
+  <p class="meta" style="margin-top:12px">Los códigos se guardan solo en este navegador. Si cambias de dispositivo o borras los datos del navegador, no aparecerán aquí.</p></div></div>
 
 <div class="ov" id="ovF"><div class="md">
   <h2 id="fh">Publicar aviso</h2>
@@ -155,6 +163,7 @@ function render(){
     :`<div class="empty">No hay avisos vigentes en «${label(cat)}».<br>¡Sé el primero en publicar uno!</div>`;
   $("mode").textContent=col?"Los avisos se comparten con todos los visitantes y se eliminan solos al vencer.":"Modo local: los avisos se guardan solo en este navegador.";
   showDetail();
+  if($("ovM").classList.contains("on"))renderMine();
 }
 
 function link(a){
@@ -240,6 +249,36 @@ function openForm(j){
   $("err").textContent="";$("auto").style.display=(!j&&sample)?"block":"none";$("f_auto").value="";$("autoMsg").textContent="";$("f_url").value="";mode(false);document.querySelectorAll("#ovF .miss").forEach(x=>x.classList.remove("miss"));$("ovF").classList.add("on");
 }
 $("new").onclick=()=>openForm();
+// Mis avisos (guardados solo en este navegador)
+const mineGet=()=>{try{return JSON.parse(localStorage.getItem("hib_mine")||"[]")}catch(e){return[]}};
+const mineSet=a=>{try{localStorage.setItem("hib_mine",JSON.stringify(a))}catch(e){}};
+let mineRows=[];
+function renderMine(){
+  const em=$("m_mail").value.trim().toLowerCase();
+  mineRows=mineGet().map(e=>({e,j:jobs.find(x=>x.kh===e.kh&&alive(x))})).filter(r=>r.j&&(!em||(r.e.mail||"").toLowerCase()===em));
+  $("m_list").innerHTML=mineRows.length?mineRows.map((r,i)=>`<div class="job"><b>${esc(r.j.title)}</b>
+    <div class="meta">${esc(r.j.empresa)} · vence ${fmt(r.j.expires)} · ${ST[estado(r.j)]}</div>
+    <div class="meta">Código: <span class="kc">${esc(r.e.key)}</span></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn s" data-a="ed" data-i="${i}">Editar</button><button class="btn d" data-a="del" data-i="${i}">Eliminar</button></div></div>`).join("")
+    :`<div class="empty">No hay avisos tuyos guardados en este dispositivo${em?" con ese correo":""}.</div>`;
+  const b=$("m_send");
+  if(mineRows.length){
+    const to=em||mineRows[0].e.mail||"";
+    b.href="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent("Mis códigos de Trabajos Ambientales")+"&body="+encodeURIComponent(mineRows.map(r=>r.j.title+": "+r.e.key).join("\n")+"\n\nGuarda este correo: con estos códigos puedes editar o eliminar tus avisos.");
+    b.style.display="inline-block";
+  }else b.style.display="none";
+}
+$("mine").onclick=()=>{$("m_mail").value="";renderMine();$("ovM").classList.add("on")};
+$("m_close").onclick=()=>$("ovM").classList.remove("on");
+$("m_mail").oninput=renderMine;
+$("m_list").onclick=async e=>{
+  const b=e.target.closest("button");if(!b)return;
+  const r=mineRows[+b.dataset.i];if(!r)return;
+  if(b.dataset.a==="ed"){$("ovM").classList.remove("on");openForm(r.j);return}
+  if(!b.dataset.s){b.dataset.s=1;b.textContent="¿Seguro? Toca otra vez";return}
+  try{if(col)await col.doc(r.j.id).delete();else{jobs=jobs.filter(x=>x.id!==r.j.id);saveLocal()}}catch(err){return}
+  mineSet(mineGet().filter(x=>x.kh!==r.e.kh));lastSig="";renderMine();render();
+};
 const OPS=["Presencial","Remoto","Mixto"];
 function fill(r){
   const set=(id,v,n)=>{if(v&&typeof v==="string")$(id).value=v.trim().slice(0,n)};
@@ -273,7 +312,7 @@ $("cx").onclick=()=>$("ovF").classList.remove("on");
 function showKey(key,mail,title){
   const href="mailto:"+encodeURIComponent(mail)+"?subject="+encodeURIComponent("Clave de tu aviso: "+title)+"&body="+encodeURIComponent("Tu clave para editar o eliminar el aviso «"+title+"» es: "+key+"\n\nGuárdala: sin ella no podrás modificar el aviso.");
   $("kbox").innerHTML=`<h2>¡Aviso publicado!</h2><p class="meta">Esta es la clave para editar o eliminar tu aviso antes de que expire:</p><div class="key">${key}</div>
-   <p class="meta">Esta página no puede enviar correos por sí sola. Usa el botón para abrir tu correo con la clave lista y envíatela a ti mismo/a. Guárdala: no se puede recuperar.</p>
+   <p class="meta">Esta página no puede enviar correos por sí sola. Usa el botón para abrir tu correo con la clave lista y envíatela a ti mismo/a. Queda guardada en «Mis avisos» de este dispositivo; si usas otro, guárdala.</p>
    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><a class="btn" style="text-decoration:none" href="${href}">Enviar clave a mi correo</a><button class="btn s" id="cp">Copiar clave</button><button class="btn s" id="kc">Cerrar</button></div>`;
   $("cp").onclick=async()=>{try{await navigator.clipboard.writeText(key);$("cp").textContent="¡Copiada!"}catch(e){$("cp").textContent="Cópiala a mano"}};
   $("kc").onclick=()=>$("ovK").classList.remove("on");
@@ -298,6 +337,7 @@ $("pub").onclick=async()=>{
     }
     const key=newKey();j.kh=await sha(key);j.pub=today();j.created=Date.now();
     if(col)await col.add(j);else{j.id="l"+Date.now().toString(36);jobs.push(j);saveLocal()}
+    {const a=mineGet();a.push({key,kh:j.kh,mail,title:j.title});mineSet(a)}
     cat=j.exp;$("ovF").classList.remove("on");render();showKey(key,mail,j.title);
   }catch(e){$("err").textContent="No se pudo guardar. Inténtalo de nuevo."}
 };
