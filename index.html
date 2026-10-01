@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trabajos Ambientales</title>
+<style>
+:root{--bg:#f4f7f4;--card:#fff;--tx:#14231a;--mu:#5d6e63;--ac:#1f7a4d;--ac2:#e3f2ea;--bd:#d9e3dc;--dg:#b3261e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1712;--card:#18231c;--tx:#e6f0e9;--mu:#9bb0a2;--ac:#4cc58a;--ac2:#1e3328;--bd:#2a3a30;--dg:#ff8a80}}
+:root[data-theme="dark"]{--bg:#0f1712;--card:#18231c;--tx:#e6f0e9;--mu:#9bb0a2;--ac:#4cc58a;--ac2:#1e3328;--bd:#2a3a30;--dg:#ff8a80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:880px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+h1{margin:0;font-size:1.5rem}h1 span{color:var(--ac)}
+.sub{color:var(--mu);margin:0 0 12px;font-size:.95rem}
+button,input,select,textarea{font:inherit;color:var(--tx)}
+.btn{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600}
+.btn.s{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+.btn.d{background:transparent;color:var(--dg);border:1px solid var(--dg);padding:6px 12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bar input,.bar select{flex:1;min-width:140px}
+input,select,textarea{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:9px 10px;width:100%}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
+.tab{white-space:nowrap;border:1px solid var(--bd);background:var(--card);border-radius:20px;padding:6px 12px;cursor:pointer;font-size:.9rem}
+.tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.tab b{opacity:.75;font-weight:600;margin-left:4px}
+.job{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px}
+.job a.t{font-size:1.1rem;font-weight:700;color:var(--ac);text-decoration:none}
+.job a.t:hover{text-decoration:underline}
+.meta{color:var(--mu);font-size:.88rem;margin-top:4px}
+.chip{display:inline-block;background:var(--ac2);color:var(--ac);border-radius:6px;padding:1px 8px;font-size:.78rem;font-weight:600;margin-right:6px}
+.empty{text-align:center;color:var(--mu);padding:32px 12px;border:1px dashed var(--bd);border-radius:12px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 12px calc(16px + env(safe-area-inset-bottom,0px));z-index:9}
+.ov.on{display:flex}
+.md{background:var(--card);border-radius:14px;max-width:640px;width:100%;padding:18px}
+.md h2{margin:0 0 6px;font-size:1.3rem}
+.md h4{margin:16px 0 4px}
+.md p{white-space:pre-wrap;margin:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.row{grid-template-columns:1fr}}
+label{display:block;font-size:.85rem;color:var(--mu);margin:10px 0 3px}
+.err{color:var(--dg);font-size:.88rem;margin-top:8px}
+.mng{margin-top:18px;padding-top:4px;border-top:1px solid var(--bd)}.key{font:700 1.5rem monospace;letter-spacing:3px;background:var(--ac2);color:var(--ac);padding:10px;border-radius:8px;text-align:center;margin:10px 0}
+.go{display:block;text-align:center;text-decoration:none;background:var(--ac);color:#fff;border-radius:10px;padding:13px 16px;font-weight:700;font-size:1.05rem;margin-top:16px}
+.note{font-size:.8rem;color:var(--mu);margin-top:16px;text-align:center}
+</style>
+</head>
+<body>
+<div class="w">
+  <header>
+    <h1>Trabajos <span>Ambientales</span></h1>
+    <button class="btn" id="new">+ Publicar aviso</button>
+  </header>
+  <p class="sub">Empleos y voluntariados para ingenieros/as y técnicos/as ambientales, por años de experiencia.</p>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Buscar por título, empresa o ciudad…">
+    <select id="tp"><option value="">Ingeniería y técnicos</option><option>Ingeniero/a ambiental</option><option>Técnico/a ambiental</option></select>
+    <select id="zn"><option value="">Todas las zonas</option></select>
+    <select id="fc"><option value="">Cualquier fecha</option><option value="0">Publicados hoy</option><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option></select>
+    <select id="od"><option value="new">Más recientes</option><option value="exp">Vencen pronto</option></select>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="list"></div>
+  <p class="note" id="mode"></p>
+</div>
+
+<div class="ov" id="ovD"><div class="md" id="det"></div></div>
+
+<div class="ov" id="ovK"><div class="md" id="kbox"></div></div>
+
+<div class="ov" id="ovF"><div class="md">
+  <h2 id="fh">Publicar aviso</h2>
+  <label>Título del puesto *</label><input id="f_t" maxlength="90" placeholder="Ej: Técnico ambiental para faena minera">
+  <div class="row">
+    <div><label>Empresa *</label><input id="f_c" maxlength="60"></div>
+    <div><label>Ubicación</label><input id="f_l" maxlength="60" list="zonas" placeholder="Ciudad / Región"><datalist id="zonas"><option value="Arica y Parinacota"><option value="Tarapacá"><option value="Antofagasta"><option value="Atacama"><option value="Coquimbo"><option value="Valparaíso"><option value="Región Metropolitana"><option value="O'Higgins"><option value="Maule"><option value="Ñuble"><option value="Biobío"><option value="La Araucanía"><option value="Los Ríos"><option value="Los Lagos"><option value="Aysén"><option value="Magallanes"></datalist></div>
+    <div><label>Perfil *</label><select id="f_p"><option>Ingeniero/a ambiental</option><option>Técnico/a ambiental</option></select></div>
+    <div><label>Experiencia requerida *</label><select id="f_e"></select></div>
+    <div><label>Modalidad</label><select id="f_m"><option>Presencial</option><option>Híbrido</option><option>Remoto</option><option>Terreno / Faena</option></select></div>
+    <div><label>Renta ofrecida (opcional)</label><input id="f_r" maxlength="60" placeholder="Ej: $900.000 líquidos. Vacío = No indica"></div>
+    <div><label>Días de trabajo (opcional)</label><input id="f_dd" maxlength="60" placeholder="Ej: Lunes a viernes. Vacío = No indica"></div>
+    <div><label>Fecha de expiración *</label><input id="f_x" type="date"></div>
+  </div>
+  <label>Descripción y requisitos *</label><textarea id="f_d" rows="6" maxlength="3000"></textarea>
+  <label>Cómo postular (correo o enlace) *</label><input id="f_a" maxlength="200" placeholder="rrhh@empresa.cl o https://…">
+  <div id="mailBox"><label>Tu correo * (te enviaremos la clave para editar o eliminar este aviso)</label><input id="f_mail" type="email" maxlength="120" placeholder="tucorreo@ejemplo.com"></div>
+  <div class="err" id="err"></div>
+  <div style="display:flex;gap:8px;margin-top:14px"><button class="btn" id="pub">Publicar</button><button class="btn s" id="cx">Cancelar</button></div>
+</div></div>
+
+<script>
+const EXP=[["sin","Sin experiencia"],["0-1","0 a 1 año"],["1-2","1 a 2 años"],["2-3","2 a 3 años"],["3-4","3 a 4 años"],["4-5","4 a 5 años"],["5-10","5 a 10 años"],["10+","10 años o más"],["vol","Voluntariados"]];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let jobs=[],col=null,me=null,admin=false,cat="sin";
+const nk=t=>(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
+const ago=j=>Math.round((new Date(today()+"T00:00:00")-new Date((j.pub||today())+"T00:00:00"))/864e5);
+const label=k=>(EXP.find(e=>e[0]===k)||[,k])[1];
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const alive=j=>j.expires&&new Date(j.expires+"T23:59:59")>new Date();
+const left=j=>Math.max(0,Math.ceil((new Date(j.expires+"T23:59:59")-new Date())/864e5));
+const fmt=d=>d?d.split("-").reverse().join("/"):"";
+
+// Persistencia local (respaldo si no hay base de datos compartida)
+function loadLocal(){try{jobs=JSON.parse(localStorage.getItem("hib_jobs")||"[]")}catch(e){jobs=[]}}
+function saveLocal(){try{localStorage.setItem("hib_jobs",JSON.stringify(jobs))}catch(e){}}
+
+function sweep(){ // elimina avisos vencidos
+  const dead=jobs.filter(j=>!alive(j));
+  if(!dead.length)return;
+  if(col){dead.forEach(j=>col.doc(j.id).delete().catch(()=>{}))}
+  else{jobs=jobs.filter(alive);saveLocal()}
+}
+
+function render(){
+  const q=$("q").value.trim().toLowerCase(),tp=$("tp").value;
+  const zs=new Map();jobs.filter(alive).forEach(j=>{const k=nk(j.lugar);if(k&&!zs.has(k))zs.set(k,j.lugar.trim())});
+  const cz=$("zn").value;
+  $("zn").innerHTML='<option value="">Todas las zonas</option>'+[...zs].sort((a,b)=>a[1].localeCompare(b[1],"es")).map(([k,v])=>`<option value="${esc(k)}">${esc(v)}</option>`).join("");
+  $("zn").value=zs.has(cz)?cz:"";
+  const zn=$("zn").value,fc=$("fc").value;
+  const base=jobs.filter(alive).filter(j=>(!tp||j.perfil===tp)&&(!zn||nk(j.lugar)===zn)&&(fc===""||ago(j)<=+fc)&&(!q||(j.title+" "+j.empresa+" "+(j.lugar||"")).toLowerCase().includes(q)));
+  $("tabs").innerHTML=EXP.map(e=>`<button class="tab${cat===e[0]?" on":""}" data-c="${e[0]}">${e[1]}<b>${base.filter(j=>j.exp===e[0]).length}</b></button>`).join("");
+  const l=base.filter(j=>j.exp===cat).sort($("od").value==="exp"?(a,b)=>a.expires.localeCompare(b.expires):(a,b)=>(b.created||0)-(a.created||0));
+  $("list").innerHTML=l.length?l.map(j=>`<div class="job"><a class="t" href="#job=${esc(j.id)}">${esc(j.title)}</a>
+    <div class="meta">${esc(j.empresa)}${j.lugar?" · "+esc(j.lugar):""}</div>
+    <div class="meta"><b>Renta:</b> ${esc(j.renta||"No indica")} · <b>Días:</b> ${esc(j.dias||"No indica")}</div>
+    <div class="meta"><span class="chip">${esc(j.perfil)}</span><span class="chip">${esc(j.modalidad||"")}</span>Vence en ${left(j)} día${left(j)===1?"":"s"}</div></div>`).join("")
+    :`<div class="empty">No hay avisos vigentes en «${label(cat)}».<br>¡Sé el primero en publicar uno!</div>`;
+  $("mode").textContent=col?"Los avisos se comparten con todos los visitantes y se eliminan solos al vencer.":"Modo local: los avisos se guardan solo en este navegador.";
+  showDetail();
+}
+
+function link(a){
+  a=a.trim();
+  if(/^https?:\/\//i.test(a))return `<a href="${esc(a)}" target="_blank" rel="noopener noreferrer">${esc(a)}</a>`;
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a))return `<a href="mailto:${esc(a)}">${esc(a)}</a>`;
+  return esc(a);
+}
+
+let lastSig="";
+const isWeb=a=>/^https?:\/\//i.test(a)||/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(a);
+function applyInfo(a){a=(a||"").trim();return !a||(isWeb(a)&&!/@/.test(a))?"":`<h4>Cómo postular</h4><p>${link(a)}</p>`}
+function applyBtn(a,title){
+  a=(a||"").trim();let h=null,t="Postular ahora";
+  if(/^https?:\/\//i.test(a))h=a;
+  else if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a)){h="mailto:"+a+"?subject="+encodeURIComponent("Postulación: "+title);t="Postular por correo"}
+  else if(/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(a))h="https://"+a;
+  return h?`<a class="go" href="${esc(h)}" target="_blank" rel="noopener noreferrer">${t} →</a>`:"";
+}
+function showDetail(){
+  const m=location.hash.match(/^#job=(.+)$/);
+  if(!m){$("ovD").classList.remove("on");lastSig="";return}
+  const j=jobs.find(x=>x.id===decodeURIComponent(m[1]));
+  const sig=(j?JSON.stringify(j):"none")+m[1]+alive(j||{});
+  if($("ovD").classList.contains("on")&&sig===lastSig)return;
+  lastSig=sig;
+  $("det").innerHTML=j&&alive(j)?`<h2>${esc(j.title)}</h2>
+    <div class="meta">${esc(j.empresa)}${j.lugar?" · "+esc(j.lugar):""}</div>
+    <div class="meta" style="margin-top:8px"><span class="chip">${esc(j.perfil)}</span><span class="chip">${esc(label(j.exp))}</span><span class="chip">${esc(j.modalidad||"")}</span></div>
+    <h4>Renta ofrecida</h4><p>${esc(j.renta||"No indica")}</p>
+    <h4>Días de trabajo</h4><p>${esc(j.dias||"No indica")}</p>
+    <h4>Descripción y requisitos</h4><p>${esc(j.desc)}</p>
+    ${applyBtn(j.apply,j.title)}${applyInfo(j.apply)}
+    <div class="meta" style="margin-top:14px">Publicado: ${fmt(j.pub)} · Vence: ${fmt(j.expires)} (${left(j)} día${left(j)===1?"":"s"})</div>
+    <div class="mng"><h4>¿Publicaste este aviso?</h4>${admin?'<div class="meta">Tienes permisos de administrador.</div>':""}
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="k" placeholder="Tu clave" style="flex:1;min-width:140px" autocomplete="off"><button class="btn s" id="ed">Editar</button><button class="btn d" id="del">Eliminar</button></div>
+      <div class="err" id="kerr"></div></div>
+    <div style="margin-top:14px"><button class="btn s" id="back">Volver</button></div>`
+    :`<h2>Aviso no disponible</h2><p class="meta">Este aviso expiró o fue eliminado.</p><div style="margin-top:14px"><button class="btn s" id="back">Volver</button></div>`;
+  $("ovD").classList.add("on");
+  $("back").onclick=()=>{location.hash=""};
+  if(!$("ed"))return;
+  const ok=async()=>{const k=$("k").value.trim().toUpperCase();if(admin||(k&&await sha(k)===j.kh))return true;$("kerr").textContent="Clave incorrecta.";return false};
+  $("ed").onclick=async()=>{if(await ok()){location.hash="";openForm(j)}};
+  $("del").onclick=async()=>{
+    if(!(await ok()))return;
+    if(!$("del").dataset.s){$("del").dataset.s=1;$("del").textContent="¿Seguro? Toca otra vez";return}
+    try{if(col)await col.doc(j.id).delete();else{jobs=jobs.filter(x=>x.id!==j.id);saveLocal()}}catch(e){$("kerr").textContent="No se pudo eliminar.";return}
+    location.hash="";render();
+  };
+}
+
+// Detección de avisos repetidos
+const STOP=new Set("para con los las del por una uno que y de la el en al se un son sus como mas".split(" "));
+const norm=t=>(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(w=>w.length>2&&!STOP.has(w));
+const jac=(a,b)=>{const A=new Set(a),B=new Set(b);if(!A.size&&!B.size)return 1;let n=0;A.forEach(w=>{if(B.has(w))n++});return n/(A.size+B.size-n)};
+const url=a=>(a||"").trim().toLowerCase().replace(/^https?:\/\/(www\.)?/,"").replace(/\/+$/,"");
+function findDup(j,ignoreId){
+  return jobs.filter(x=>alive(x)&&x.id!==ignoreId).find(x=>{
+    const emp=jac(norm(x.empresa),norm(j.empresa))>=0.8;
+    const t=jac(norm(x.title),norm(j.title)),d=jac(norm(x.desc),norm(j.desc));
+    const sameApply=url(x.apply)&&url(x.apply)===url(j.apply);
+    return (emp&&(t>=0.7||d>=0.75||(sameApply&&t>=0.4)))||(t>=0.9&&d>=0.6);
+  });
+}
+
+// Formulario
+let editId=null;
+const sha=async t=>{const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("")};
+const newKey=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";return [...crypto.getRandomValues(new Uint8Array(8))].map(x=>a[x%a.length]).join("")};
+$("f_e").innerHTML=EXP.map(e=>`<option value="${e[0]}">${e[1]}</option>`).join("");
+function openForm(j){
+  editId=j?j.id:null;
+  const v=(i,x)=>{$(i).value=x||""};
+  v("f_t",j&&j.title);v("f_c",j&&j.empresa);v("f_l",j&&j.lugar);v("f_d",j&&j.desc);v("f_a",j&&j.apply);v("f_r",j&&j.renta);v("f_dd",j&&j.dias);v("f_mail","");
+  $("f_p").value=j?j.perfil:"Ingeniero/a ambiental";$("f_m").value=(j&&j.modalidad)||"Presencial";
+  $("f_x").min=today();$("f_x").value=j?j.expires:addDays(30);$("f_e").value=j?j.exp:cat;
+  $("mailBox").style.display=j?"none":"block";
+  $("fh").textContent=j?"Editar aviso":"Publicar aviso";$("pub").textContent=j?"Guardar cambios":"Publicar";
+  $("err").textContent="";$("ovF").classList.add("on");
+}
+$("new").onclick=()=>openForm();
+$("cx").onclick=()=>$("ovF").classList.remove("on");
+function showKey(key,mail,title){
+  const href="mailto:"+encodeURIComponent(mail)+"?subject="+encodeURIComponent("Clave de tu aviso: "+title)+"&body="+encodeURIComponent("Tu clave para editar o eliminar el aviso «"+title+"» es: "+key+"\n\nGuárdala: sin ella no podrás modificar el aviso.");
+  $("kbox").innerHTML=`<h2>¡Aviso publicado!</h2><p class="meta">Esta es la clave para editar o eliminar tu aviso antes de que expire:</p><div class="key">${key}</div>
+   <p class="meta">Esta página no puede enviar correos por sí sola. Usa el botón para abrir tu correo con la clave lista y envíatela a ti mismo/a. Guárdala: no se puede recuperar.</p>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><a class="btn" style="text-decoration:none" href="${href}">Enviar clave a mi correo</a><button class="btn s" id="cp">Copiar clave</button><button class="btn s" id="kc">Cerrar</button></div>`;
+  $("cp").onclick=async()=>{try{await navigator.clipboard.writeText(key);$("cp").textContent="¡Copiada!"}catch(e){$("cp").textContent="Cópiala a mano"}};
+  $("kc").onclick=()=>$("ovK").classList.remove("on");
+  $("ovK").classList.add("on");
+}
+$("pub").onclick=async()=>{
+  const j={title:$("f_t").value.trim(),empresa:$("f_c").value.trim(),lugar:$("f_l").value.trim(),perfil:$("f_p").value,exp:$("f_e").value,
+    modalidad:$("f_m").value,expires:$("f_x").value,renta:$("f_r").value.trim(),dias:$("f_dd").value.trim(),desc:$("f_d").value.trim(),apply:$("f_a").value.trim()};
+  const mail=$("f_mail").value.trim();
+  if(!j.title||!j.empresa||!j.desc||!j.apply||!j.expires){$("err").textContent="Completa los campos obligatorios (*).";return}
+  if(!editId&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)){$("err").textContent="Ingresa un correo válido para recibir tu clave.";return}
+  if(!alive(j)){$("err").textContent="La fecha de expiración debe ser hoy o futura.";return}
+  const dup=findDup(j,editId);
+  if(dup){$("err").innerHTML=`Este aviso parece repetido: «${esc(dup.title)}» de ${esc(dup.empresa)} ya está publicado. <a href="#job=${esc(dup.id)}" id="dl">Ver aviso existente</a>`;$("dl").onclick=()=>$("ovF").classList.remove("on");return}
+  try{
+    if(editId){
+      if(col)await col.doc(editId).update(j);else{jobs=jobs.map(x=>x.id===editId?Object.assign(x,j):x);saveLocal()}
+      $("ovF").classList.remove("on");cat=j.exp;lastSig="";render();return;
+    }
+    const key=newKey();j.kh=await sha(key);j.pub=today();j.created=Date.now();
+    if(col)await col.add(j);else{j.id="l"+Date.now().toString(36);jobs.push(j);saveLocal()}
+    cat=j.exp;$("ovF").classList.remove("on");render();showKey(key,mail,j.title);
+  }catch(e){$("err").textContent="No se pudo guardar. Inténtalo de nuevo."}
+};
+
+$("tabs").onclick=e=>{const b=e.target.closest(".tab");if(b){cat=b.dataset.c;render()}};
+$("q").oninput=render;["tp","zn","fc","od"].forEach(i=>$(i).onchange=render);
+window.addEventListener("hashchange",showDetail);
+setInterval(()=>{sweep();render()},60000);
+
+loadLocal();sweep();render();
+
+// Base de datos compartida (si está disponible)
+(async()=>{
+  try{
+    if(!(window.claude&&claude.use))return;
+    const user=await claude.use("user");
+    if(user){try{me=await user.id()}catch(e){}admin=!!(user.isOwner&&user.isOwner())}
+    const db=await claude.use("db");
+    if(!db)return;
+    col=db.collection("jobs");jobs=[];
+    col.onSnapshot(s=>{jobs=s.docs.map(d=>Object.assign({id:d.id},d.data()));sweep();render()},()=>{});
+    render();
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
