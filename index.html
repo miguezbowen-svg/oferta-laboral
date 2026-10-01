@@ -58,6 +58,9 @@ label{display:block;font-size:.85rem;color:var(--mu);margin:10px 0 3px}
   <div class="bar">
     <input id="q" type="search" placeholder="Buscar por título, empresa o ciudad…">
     <select id="tp"><option value="">Ingeniería y técnicos</option><option>Ingeniero/a ambiental</option><option>Técnico/a ambiental</option></select>
+    <select id="zn"><option value="">Todas las zonas</option></select>
+    <select id="fc"><option value="">Cualquier fecha</option><option value="0">Publicados hoy</option><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option></select>
+    <select id="od"><option value="new">Más recientes</option><option value="exp">Vencen pronto</option></select>
   </div>
   <div class="tabs" id="tabs"></div>
   <div id="list"></div>
@@ -73,12 +76,12 @@ label{display:block;font-size:.85rem;color:var(--mu);margin:10px 0 3px}
   <label>Título del puesto *</label><input id="f_t" maxlength="90" placeholder="Ej: Técnico ambiental para faena minera">
   <div class="row">
     <div><label>Empresa *</label><input id="f_c" maxlength="60"></div>
-    <div><label>Ubicación</label><input id="f_l" maxlength="60" placeholder="Ciudad / Región"></div>
+    <div><label>Ubicación</label><input id="f_l" maxlength="60" list="zonas" placeholder="Ciudad / Región"><datalist id="zonas"><option value="Arica y Parinacota"><option value="Tarapacá"><option value="Antofagasta"><option value="Atacama"><option value="Coquimbo"><option value="Valparaíso"><option value="Región Metropolitana"><option value="O'Higgins"><option value="Maule"><option value="Ñuble"><option value="Biobío"><option value="La Araucanía"><option value="Los Ríos"><option value="Los Lagos"><option value="Aysén"><option value="Magallanes"></datalist></div>
     <div><label>Perfil *</label><select id="f_p"><option>Ingeniero/a ambiental</option><option>Técnico/a ambiental</option></select></div>
     <div><label>Experiencia requerida *</label><select id="f_e"></select></div>
     <div><label>Modalidad</label><select id="f_m"><option>Presencial</option><option>Híbrido</option><option>Remoto</option><option>Terreno / Faena</option></select></div>
-    <div><label>Renta ofrecida *</label><input id="f_r" maxlength="60" placeholder="Ej: $900.000 líquidos / A convenir"></div>
-    <div><label>Días de trabajo *</label><input id="f_dd" maxlength="60" placeholder="Ej: Lunes a viernes / Turno 7x7"></div>
+    <div><label>Renta ofrecida (opcional)</label><input id="f_r" maxlength="60" placeholder="Ej: $900.000 líquidos. Vacío = No indica"></div>
+    <div><label>Días de trabajo (opcional)</label><input id="f_dd" maxlength="60" placeholder="Ej: Lunes a viernes. Vacío = No indica"></div>
     <div><label>Fecha de expiración *</label><input id="f_x" type="date"></div>
   </div>
   <label>Descripción y requisitos *</label><textarea id="f_d" rows="6" maxlength="3000"></textarea>
@@ -93,6 +96,8 @@ const EXP=[["sin","Sin experiencia"],["0-1","0 a 1 año"],["1-2","1 a 2 años"],
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let jobs=[],col=null,me=null,admin=false,cat="sin";
+const nk=t=>(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
+const ago=j=>Math.round((new Date(today()+"T00:00:00")-new Date((j.pub||today())+"T00:00:00"))/864e5);
 const label=k=>(EXP.find(e=>e[0]===k)||[,k])[1];
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
@@ -113,12 +118,17 @@ function sweep(){ // elimina avisos vencidos
 
 function render(){
   const q=$("q").value.trim().toLowerCase(),tp=$("tp").value;
-  const base=jobs.filter(alive).filter(j=>(!tp||j.perfil===tp)&&(!q||(j.title+" "+j.empresa+" "+(j.lugar||"")).toLowerCase().includes(q)));
+  const zs=new Map();jobs.filter(alive).forEach(j=>{const k=nk(j.lugar);if(k&&!zs.has(k))zs.set(k,j.lugar.trim())});
+  const cz=$("zn").value;
+  $("zn").innerHTML='<option value="">Todas las zonas</option>'+[...zs].sort((a,b)=>a[1].localeCompare(b[1],"es")).map(([k,v])=>`<option value="${esc(k)}">${esc(v)}</option>`).join("");
+  $("zn").value=zs.has(cz)?cz:"";
+  const zn=$("zn").value,fc=$("fc").value;
+  const base=jobs.filter(alive).filter(j=>(!tp||j.perfil===tp)&&(!zn||nk(j.lugar)===zn)&&(fc===""||ago(j)<=+fc)&&(!q||(j.title+" "+j.empresa+" "+(j.lugar||"")).toLowerCase().includes(q)));
   $("tabs").innerHTML=EXP.map(e=>`<button class="tab${cat===e[0]?" on":""}" data-c="${e[0]}">${e[1]}<b>${base.filter(j=>j.exp===e[0]).length}</b></button>`).join("");
-  const l=base.filter(j=>j.exp===cat).sort((a,b)=>(b.created||0)-(a.created||0));
+  const l=base.filter(j=>j.exp===cat).sort($("od").value==="exp"?(a,b)=>a.expires.localeCompare(b.expires):(a,b)=>(b.created||0)-(a.created||0));
   $("list").innerHTML=l.length?l.map(j=>`<div class="job"><a class="t" href="#job=${esc(j.id)}">${esc(j.title)}</a>
     <div class="meta">${esc(j.empresa)}${j.lugar?" · "+esc(j.lugar):""}</div>
-    <div class="meta"><b>Renta:</b> ${esc(j.renta||"No informada")} · <b>Días:</b> ${esc(j.dias||"No informados")}</div>
+    <div class="meta"><b>Renta:</b> ${esc(j.renta||"No indica")} · <b>Días:</b> ${esc(j.dias||"No indica")}</div>
     <div class="meta"><span class="chip">${esc(j.perfil)}</span><span class="chip">${esc(j.modalidad||"")}</span>Vence en ${left(j)} día${left(j)===1?"":"s"}</div></div>`).join("")
     :`<div class="empty">No hay avisos vigentes en «${label(cat)}».<br>¡Sé el primero en publicar uno!</div>`;
   $("mode").textContent=col?"Los avisos se comparten con todos los visitantes y se eliminan solos al vencer.":"Modo local: los avisos se guardan solo en este navegador.";
@@ -133,6 +143,8 @@ function link(a){
 }
 
 let lastSig="";
+const isWeb=a=>/^https?:\/\//i.test(a)||/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(a);
+function applyInfo(a){a=(a||"").trim();return !a||(isWeb(a)&&!/@/.test(a))?"":`<h4>Cómo postular</h4><p>${link(a)}</p>`}
 function applyBtn(a,title){
   a=(a||"").trim();let h=null,t="Postular ahora";
   if(/^https?:\/\//i.test(a))h=a;
@@ -150,10 +162,10 @@ function showDetail(){
   $("det").innerHTML=j&&alive(j)?`<h2>${esc(j.title)}</h2>
     <div class="meta">${esc(j.empresa)}${j.lugar?" · "+esc(j.lugar):""}</div>
     <div class="meta" style="margin-top:8px"><span class="chip">${esc(j.perfil)}</span><span class="chip">${esc(label(j.exp))}</span><span class="chip">${esc(j.modalidad||"")}</span></div>
-    <h4>Renta ofrecida</h4><p>${esc(j.renta||"No informada")}</p>
-    <h4>Días de trabajo</h4><p>${esc(j.dias||"No informados")}</p>
+    <h4>Renta ofrecida</h4><p>${esc(j.renta||"No indica")}</p>
+    <h4>Días de trabajo</h4><p>${esc(j.dias||"No indica")}</p>
     <h4>Descripción y requisitos</h4><p>${esc(j.desc)}</p>
-    ${applyBtn(j.apply,j.title)}<h4>Cómo postular</h4><p>${link(j.apply)}</p>
+    ${applyBtn(j.apply,j.title)}${applyInfo(j.apply)}
     <div class="meta" style="margin-top:14px">Publicado: ${fmt(j.pub)} · Vence: ${fmt(j.expires)} (${left(j)} día${left(j)===1?"":"s"})</div>
     <div class="mng"><h4>¿Publicaste este aviso?</h4>${admin?'<div class="meta">Tienes permisos de administrador.</div>':""}
       <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="k" placeholder="Tu clave" style="flex:1;min-width:140px" autocomplete="off"><button class="btn s" id="ed">Editar</button><button class="btn d" id="del">Eliminar</button></div>
@@ -217,7 +229,7 @@ $("pub").onclick=async()=>{
   const j={title:$("f_t").value.trim(),empresa:$("f_c").value.trim(),lugar:$("f_l").value.trim(),perfil:$("f_p").value,exp:$("f_e").value,
     modalidad:$("f_m").value,expires:$("f_x").value,renta:$("f_r").value.trim(),dias:$("f_dd").value.trim(),desc:$("f_d").value.trim(),apply:$("f_a").value.trim()};
   const mail=$("f_mail").value.trim();
-  if(!j.title||!j.empresa||!j.renta||!j.dias||!j.desc||!j.apply||!j.expires){$("err").textContent="Completa los campos obligatorios (*).";return}
+  if(!j.title||!j.empresa||!j.desc||!j.apply||!j.expires){$("err").textContent="Completa los campos obligatorios (*).";return}
   if(!editId&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)){$("err").textContent="Ingresa un correo válido para recibir tu clave.";return}
   if(!alive(j)){$("err").textContent="La fecha de expiración debe ser hoy o futura.";return}
   const dup=findDup(j,editId);
@@ -234,7 +246,7 @@ $("pub").onclick=async()=>{
 };
 
 $("tabs").onclick=e=>{const b=e.target.closest(".tab");if(b){cat=b.dataset.c;render()}};
-$("q").oninput=render;$("tp").onchange=render;
+$("q").oninput=render;["tp","zn","fc","od"].forEach(i=>$(i).onchange=render);
 window.addEventListener("hashchange",showDetail);
 setInterval(()=>{sweep();render()},60000);
 
